@@ -10,9 +10,9 @@ RETURNS (
 )
 AS
 BEGIN
-  hash_ = hash.string(hash.Whirlpool(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
+  hash_ = hash.key0s(hash.Whirlpool(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
   SUSPEND;
-  hash_ = hash.blob_(hash.Whirlpool(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
+  hash_ = hash.key0b(hash.Whirlpool(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
   SUSPEND;
 END
 ```
