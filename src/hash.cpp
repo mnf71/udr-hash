@@ -24,7 +24,7 @@
 namespace hashudr
 {
 
-resorces_dispather dispather;
+resorces_pool pool;
 hash_helper helper;
 
 //-----------------------------------------------------------------------------
@@ -126,14 +126,14 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
 }
 
 //-----------------------------------------------------------------------------
-// resorces_dispather
+// UDR resorces
 //
 
-resorces_dispather::resorces_dispather()
+resorces_pool::resorces_pool()
 {
 }
 
-resorces_dispather::~resorces_dispather() noexcept
+resorces_pool::~resorces_pool() noexcept
 {
 	for (resources_it = resources_map.begin(); resources_it != resources_map.end(); ++resources_it)
 	{
@@ -142,7 +142,7 @@ resorces_dispather::~resorces_dispather() noexcept
 	}
 }
 
-ISC_UINT64 resorces_dispather::initialize_attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+ISC_UINT64 resorces_pool::initialize_attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 att_id = attachment_id(status, context);
 	resources_it = resources_map.find(att_id);
@@ -155,7 +155,7 @@ ISC_UINT64 resorces_dispather::initialize_attachment(FB_UDR_STATUS_TYPE* status,
 	return att_id;
 }
 
-attachment_resources* resorces_dispather::current_resources(const ISC_UINT64 attachment_id)
+attachment_resources* resorces_pool::current_resources(const ISC_UINT64 attachment_id)
 {
 	attachment_resources* att_resources;
 	resources_it = resources_map.find(attachment_id);
@@ -163,7 +163,7 @@ attachment_resources* resorces_dispather::current_resources(const ISC_UINT64 att
 	return att_resources;
 }
 
-void resorces_dispather::finalize_attachment(const ISC_UINT64 attachment_id)
+void resorces_pool::finalize_attachment(const ISC_UINT64 attachment_id)
 {
 	resources_it = resources_map.find(attachment_id);
 	if (resources_it != resources_map.end()) {
@@ -172,7 +172,7 @@ void resorces_dispather::finalize_attachment(const ISC_UINT64 attachment_id)
 	}
 }
 
-ISC_UINT64 resorces_dispather::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+ISC_UINT64 resorces_pool::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 attachment_id = 0;
 
@@ -327,7 +327,9 @@ std::string hash_helper::hash_key(const HASH hash, const std::string* value)
 //  external name 'hash!key'
 //  engine udr;
 //
-FB_UDR_BEGIN_FUNCTION_RESOURCE(key)
+FB_UDR_BEGIN_FUNCTION(key)
+	
+	DECLARE_RESOURCE
 
 	enum in : short {
 		hash = 0, value
@@ -342,6 +344,8 @@ FB_UDR_BEGIN_FUNCTION_RESOURCE(key)
 	
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		unsigned in_count = in_metadata->getCount(status);
@@ -362,8 +366,6 @@ FB_UDR_BEGIN_FUNCTION_RESOURCE(key)
 			in_offsets[i] = in_metadata->getOffset(status, i);
 			in_null_offsets[i] = in_metadata->getNullOffset(status, i);
 		}
-
-		INITIALIZE_RESORCES
 	}
 
 	FB_UDR_DESTRUCTOR

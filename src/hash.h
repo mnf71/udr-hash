@@ -121,17 +121,16 @@ namespace hashudr
 	return; \
 } /* HASHUDR_THROW */	
 
-#define	FB_UDR_BEGIN_FUNCTION_RESOURCE(name)	\
-	FB_UDR_BEGIN_FUNCTION(name)	\
-		const ISC_UINT64 att_id = 0;	\
-		attachment_resources* att_resources = nullptr;	\
-/* FB_UDR_BEGIN_FUNCTION_RESOURCE */ 
+#define	DECLARE_RESOURCE	\
+	const ISC_UINT64 att_id = 0;	\
+	attachment_resources* att_resources = nullptr;	\
+/* DECLARE_RESOURCE */ 
 
 #define	INITIALIZE_RESORCES	\
 {	\
 	try		\
 	{	\
-		const_cast<ISC_UINT64&>(att_id) = dispather.initialize_attachment(status, context);	\
+		const_cast<ISC_UINT64&>(att_id) = pool.initialize_attachment(status, context);	\
 	}	\
 	catch (std::runtime_error const& e)	\
 	{	\
@@ -141,8 +140,7 @@ namespace hashudr
 
 #define	ATTACHMENT_RESORCES	\
 {	\
-	att_resources = dispather.current_resources(att_id);	\
-	if (att_resources == nullptr)	\
+	if ((att_resources = pool.current_resources(att_id)) == nullptr)	\
 		HASHUDR_THROW("Attachment resources undefined.")	\
 	att_resources->current_snapshot(status, context);	\
 	att_resources->current_transaction();	\
@@ -150,7 +148,7 @@ namespace hashudr
 
 #define	FINALIZE_RESORCES	\
 {	\
-	dispather.finalize_attachment(att_id);	\
+	pool.finalize_attachment(att_id);	\
 } /* FINALIZE_RESORCES */
 
 //-----------------------------------------------------------------------------
@@ -195,7 +193,7 @@ public:
 	const char* exception_message(const char* name);
 
 private:
-	friend class resorces_dispather;
+	friend class resorces_pool;
 
 	const ISC_UINT64 attachment_id;
 	
@@ -213,11 +211,11 @@ private:
 
 using resorces_mapping = std::map<ISC_UINT64, attachment_resources*>;
 
-class resorces_dispather
+class resorces_pool
 {
 public:
-	resorces_dispather();
-	~resorces_dispather() noexcept;
+	resorces_pool();
+	~resorces_pool() noexcept;
 
 	ISC_UINT64 initialize_attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
 	attachment_resources* current_resources(const ISC_UINT64 attachment_id);
@@ -230,7 +228,7 @@ private:
 	ISC_UINT64 attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
 };
 
-extern resorces_dispather dispather;
+extern resorces_pool pool;
 
 //-----------------------------------------------------------------------------
 // Класс вспомогательных функций библиотеки
