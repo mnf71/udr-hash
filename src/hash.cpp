@@ -118,6 +118,7 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
 			memcpy(&exceptions[i], &exception, sizeof(attachment_exception));
 		}
 		curs->close(snapshot.status);
+		curs.release();
 	}
 	catch (...)
 	{
@@ -244,6 +245,7 @@ void hash_helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, s
 			}
 		}
 		blob->close(att_snapshot->status);
+		blob.release(); 
 	}
 	catch (...)
 	{
